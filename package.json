@@ -1,0 +1,31 @@
+{
+  "name": "real-time",
+  "version": "1.0.0",
+  "description": "Crowdsource in real time",
+  "main": "server.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emilydowdle/real-time.git"
+  },
+  "keywords": [
+    "survey",
+    "crowdsource",
+    "express",
+    "real-time"
+  ],
+  "author": "Emily Dowdle",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emilydowdle/real-time/issues"
+  },
+  "homepage": "https://github.com/emilydowdle/real-time#readme",
+  "dependencies": {
+    "express": "^4.13.4"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  }
+}
