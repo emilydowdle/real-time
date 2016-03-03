@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Real Time Feedback</title>
+  </head>
+  <body>
+    <div id="poll-data">
+      <h3>Create A New Poll</h3>
+      <input id="poll-question" placeholder="What's Your Question?"></input>
+      <input id="poll-answer-1" placeholder="Option 1"></input>
+      <input id="poll-answer-2" placeholder="Option 2"></input>
+      <input id="poll-answer-3" placeholder="Option 3"></input>
+      <button id="create-poll">Submit</button>
+    </div>
+    <div id="connection-count"></div>
+    <div id="status-message"></div>
+    <div id="choices">
+      <button>E</button>
+      <button>B</button>
+      <button>C</button>
+      <button>D</button>
+    </div>
+    <div id="vote-count"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>
