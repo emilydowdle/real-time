@@ -67,21 +67,20 @@ io.on('connection', function (socket) {
 
   io.sockets.emit('userConnection', io.engine.clientsCount); //emits to all connected clients
 
-  socket.emit('statusMessage', 'You have connected.'); //emits to one client
 
   socket.on('message', function (channel, message) {
     if (channel === 'voteCast') {
       votes[socket.id] = message;
       socket.emit('voteCount', countVotes(votes));
       console.log(countVotes(votes))
-      socket.emit('statusMessage', 'Your vote has been cast! You chose option ' + message + '.'); //emits to one client
+      // socket.emit('statusMessage', 'Your vote has been cast! You chose option ' + message + '.'); //emits to one client
       console.log('Your vote has been cast: ' + message)
     }
   });
 
   socket.on('message', function (channel, message) {
     if (channel === 'newPoll') {
-      console.log(message)
+      socket.emit('pollDisplay', message); //emits to one client
     }
   })
 
@@ -102,9 +101,8 @@ function countVotes(votes) {
   var voteCount = {
       A: 0,
       B: 0,
-      C: 0,
-      D: 0
-  };
+      C: 0
+    };
   for (var vote in votes) {
     voteCount[votes[vote]]++
   }

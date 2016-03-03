@@ -6,19 +6,22 @@
   <body>
     <div id="poll-data">
       <h3>Create A New Poll</h3>
-      <input id="poll-question" placeholder="What's Your Question?"></input>
-      <input id="poll-answer-1" placeholder="Option 1"></input>
-      <input id="poll-answer-2" placeholder="Option 2"></input>
-      <input id="poll-answer-3" placeholder="Option 3"></input>
-      <button id="create-poll">Submit</button>
+      <input class="new-poll" id="question" placeholder="What's Your Question?"></input>
+      <input class="new-poll" id="a" placeholder="Option 1"></input>
+      <input class="new-poll" id="b" placeholder="Option 2"></input>
+      <input class="new-poll" id="c" placeholder="Option 3"></input>
+      <button class="new-poll" id="create-poll">Submit</button>
     </div>
     <div id="connection-count"></div>
-    <div id="status-message"></div>
+
+    <div id="poll-display"></div>
+
+    <div id="instructions"></div>
+
     <div id="choices">
-      <button>E</button>
-      <button>B</button>
-      <button>C</button>
-      <button>D</button>
+      <button id="button-1">A</button>
+      <button id="button-2">B</button>
+      <button id="button-3">C</button>
     </div>
     <div id="vote-count"></div>
     <script src="/socket.io/socket.io.js"></script>

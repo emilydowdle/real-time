@@ -6,16 +6,18 @@ socket.on('usersConnected', function (count) {
   connectionCount.innerText = 'Connected Users: ' + count;
 });
 
-var statusMessage = document.getElementById('status-message');
+var pollDisplay = document.getElementById('poll-display');
 
-socket.on('statusMessage', function (message) {
-  statusMessage.innerText = message;
+socket.on('pollDisplay', function (message) {
+  for (var key in message){
+    pollDisplay.innerText = pollDisplay.innerText + key.toUpperCase() + ": " + message[key] + '\n';
+  }
+  document.getElementById('poll-display').innerText = "Please cast your vote below.";
 });
 
 var voteCount = document.getElementById('vote-count');
 
 socket.on('voteCount', function (message) {
-  console.log(localStorage["voteCount"])
   if (localStorage["voteCount"] != undefined) {
     totalVotes = JSON.parse(localStorage["voteCount"])
     for (var key in totalVotes){
@@ -25,9 +27,15 @@ socket.on('voteCount', function (message) {
     totalVotes = message
   };
 
-  voteCount.innerText = 'Total Votes: ';
+  voteCount.innerText = 'Total Votes: \n';
+  numberVoted = 0
+
   for (var key in totalVotes){
-    voteCount.innerText = voteCount.innerText + ' ' + key + ": " + totalVotes[key];
+    numberVoted = numberVoted + totalVotes[key]
+  }
+
+  for (var key in totalVotes){
+    voteCount.innerText = voteCount.innerText + ' ' + key + ": " + totalVotes[key] + ' (' + Math.round( totalVotes[key] / numberVoted  * 100 ) + '%)\n' ;
   }
   localStorage["voteCount"] = JSON.stringify(totalVotes)
 });
@@ -51,12 +59,6 @@ newPoll.addEventListener('click', function () {
   }
   socket.send('newPoll', poll)
 })
-
-// for (var i = 0; i < pollData.length; i++) {
-//   pollData[i].addEventListener('click', function () {
-//     socket.send('voteCast', this.innerText);
-//   });
-// }
 
 socket.on('newPoll', function (message) {
   statusMessage.innerText = message;
