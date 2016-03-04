@@ -4,14 +4,9 @@
     <title>Real Time Feedback</title>
   </head>
   <body>
-    <div id="poll-data">
-      <h3>Create A New Poll</h3>
-      <input class="new-poll" id="question" placeholder="What's Your Question?"></input>
-      <input class="new-poll" id="a" placeholder="Option 1"></input>
-      <input class="new-poll" id="b" placeholder="Option 2"></input>
-      <input class="new-poll" id="c" placeholder="Option 3"></input>
-      <button class="new-poll" id="create-poll">Submit</button>
-    </div>
+    
+    <div id="status-message"></div>
+
     <div id="connection-count"></div>
 
     <div id="poll-display"></div>
@@ -23,7 +18,11 @@
       <button id="button-2">B</button>
       <button id="button-3">C</button>
     </div>
+
     <div id="vote-count"></div>
+
+    <button id="close-poll">Close Poll</button>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="/client.js"></script>
   </body>

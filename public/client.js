@@ -1,18 +1,22 @@
 var socket = io();
 
-var connectionCount = document.getElementById('connection-count');
-
-socket.on('usersConnected', function (count) {
-  connectionCount.innerText = 'Connected Users: ' + count;
-});
-
+var closePoll = document.getElementById('close-poll')
+var instructions = document.getElementById('instructions')
 var pollDisplay = document.getElementById('poll-display');
+var statusMessage = document.getElementById('status-message')
+
+if (closePoll) {
+  closePoll.addEventListener('click', function () {
+    socket.send('closePoll', 'Close poll')
+  })
+}
 
 socket.on('pollDisplay', function (message) {
+  debugger
   for (var key in message){
     pollDisplay.innerText = pollDisplay.innerText + key.toUpperCase() + ": " + message[key] + '\n';
   }
-  document.getElementById('poll-display').innerText = "Please cast your vote below.";
+  instructions.innerText = "Please cast your vote below.";
 });
 
 var voteCount = document.getElementById('vote-count');
@@ -44,22 +48,35 @@ var buttons = document.querySelectorAll('#choices button');
 
 for (var i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener('click', function () {
-    socket.send('voteCast', this.innerText);
+    vote = {}
+    id = socket.io.engine.id
+    vote[id] = this.innerText
+    // console.log(this.socket.sessionid);
+    socket.send('voteCast', vote);
   });
 }
 
-var newPoll = document.getElementById('create-poll');
+// var newPoll = document.getElementById('create-poll');
 var pollData = document.querySelectorAll('#poll-data input')
 
-newPoll.addEventListener('click', function () {
-  poll = {}
-  for (var i = 0; i < pollData.length; i++) {
-    poll[pollData[i].id] = pollData[i].value
-    console.log(poll)
-  }
-  socket.send('newPoll', poll)
-})
+// newPoll.addEventListener('click', function () {
+//
+//   poll = {}
+//   for (var i = 0; i < pollData.length; i++) {
+//     poll[pollData[i].id] = pollData[i].value
+//     console.log(poll)
+//   }
+//   socket.send('newPoll', poll)
+// })
 
-socket.on('newPoll', function (message) {
+// socket.on('newPoll', function (message) {
+//   statusMessage.innerText = message;
+// });
+
+socket.on('statusMessage', function (message) {
+  statusMessage.innerText = message;
+});
+
+socket.on('pollClosed', function (message) {
   statusMessage.innerText = message;
 });

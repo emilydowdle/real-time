@@ -5,7 +5,14 @@ html(lang="en")
   body
     h3= title
 
-    div#status-message
+    div#links
+      p Thanks for setting up a new poll! Stay on this page to view results.
+
+      div
+        a(href='polls/#{identifier.id}') Vote here
+
+      div
+        a(href='polls/#{identifier.id}/admin') Permanent admin link
 
     div#connection-count
 
@@ -21,6 +28,9 @@ html(lang="en")
       button#button-3= poll.c
 
     div#vote-count
+
+    button#close-poll.
+      Close Poll
 
     script(src='/socket.io/socket.io.js')
     script(src='/client.js')

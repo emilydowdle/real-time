@@ -13,42 +13,48 @@ app.use(express.static('public'));
 
 // app.set('port', process.env.PORT || 3000);
 app.locals.title = 'Real Time Feedback';
+app.locals.polls = {};
 
 app.set('view engine', 'jade');
 
 app.get('/', (request, response) => {
-  response.sendFile(__dirname + '/public/index.html');
+  response.sendFile(__dirname + '/views/index.html');
 });
 
-// app.listen(app.get('port'), () => {
-//   console.log(`${app.locals.title} is running on ${app.get('port')}.`);
-// });
+app.get('/polls', (request, response) => {
+  response.sendFile(__dirname + '/views/index.html');
+});
 
-// if (!module.parent) {
-//   app.listen(app.get('port'), () => {
-//     console.log(`${app.locals.title} is running on ${app.get('port')}.`);
-//   });
-// }
-//
-// app.post('/polls', (request, response) => {
-//   if (!request.body.poll) { return response.sendStatus(400); }
-//
-//   var id = generateId();
-//
-//   app.locals.polls[id] = request.body.poll;
-//
-//   response.redirect('/polls/' + id);
-// });
-//
-// app.get('/polls/:id', (request, response) => {
-//   var poll = app.locals.polls[request.params.id];
-//
-//   response.render('poll', { poll: poll });
-// });
-//
-// app.locals.pizzas = {};
-//
-// module.exports = app;
+app.post('/polls', (request, response) => {
+  if (!request.body) { return response.sendStatus(400); }
+  var id = generateId();
+  // var socketId = generateId();
+  app.locals.polls[id] = request.body;
+  poll = app.locals.polls[id]
+  console.log('this is the id: ' + id)
+  // console.log(app.locals.polls)
+
+  response.render('admin', { poll: poll, identifier: { id: id } })
+
+  // response.redirect('/polls/' + id + '/admin', { poll: poll });
+});
+
+app.get('/polls/:id', (request, response) => {
+  var poll = app.locals.polls[request.params.id];
+  console.log(poll)
+
+  // response.sendFile(__dirname + '/views/index.html', { poll: poll });
+  // console.log(poll)
+  response.render('poll', { poll: poll })
+});
+
+app.get('/polls/:id/admin', (request, response) => {
+  var poll = app.locals.polls[request.params.id];
+
+  // response.sendFile(__dirname + '/views/index.html', { poll: poll });
+  // console.log(poll)
+  response.render('admin', { poll: poll })
+});
 
 const port = process.env.PORT || 3000;
 
@@ -61,26 +67,34 @@ server.listen(port, function () {
 const socketIo = require('socket.io');
 const io = socketIo(server);
 var votes = {};
+var clients = {};
 
 io.on('connection', function (socket) {
-  console.log('A user has connected.', io.engine.clientsCount);
+  // console.log('A user has connected.', io.engine.clientsCount);
+  io.to(socket.id).emit('statusMessage', 'Thank you for joining this live poll.');
 
   io.sockets.emit('userConnection', io.engine.clientsCount); //emits to all connected clients
 
-
   socket.on('message', function (channel, message) {
     if (channel === 'voteCast') {
-      votes[socket.id] = message;
+      if (!votes[socket.id]) {
+        votes[socket.id] = message;
+      }
+      stripped_id = socket.id.replace('/#', '')
       socket.emit('voteCount', countVotes(votes));
-      console.log(countVotes(votes))
-      // socket.emit('statusMessage', 'Your vote has been cast! You chose option ' + message + '.'); //emits to one client
-      console.log('Your vote has been cast: ' + message)
+      io.to(socket.id).emit('statusMessage', 'Your vote has been cast! You chose "' + votes[socket.id][stripped_id] + '".');
     }
   });
 
   socket.on('message', function (channel, message) {
     if (channel === 'newPoll') {
-      socket.emit('pollDisplay', message); //emits to one client
+    }
+  })
+
+  socket.on('message', function (channel, message) {
+    if (channel === 'closePoll') {
+      io.sockets.emit('pollClosed', 'This poll is now closed.');
+      socket.disconnect();
     }
   })
 
@@ -93,7 +107,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('voteCount', function (votes) {
-    console.log(votes);
+
   });
 });
 
@@ -104,7 +118,7 @@ function countVotes(votes) {
       C: 0
     };
   for (var vote in votes) {
-    voteCount[votes[vote]]++
+    // voteCount[votes[vote]]++
   }
   return voteCount;
 }
