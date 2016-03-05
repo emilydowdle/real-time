@@ -4,16 +4,15 @@ const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
 const generateId = require('./lib/generate-id');
-// const server = http.createServer(app)
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
-// app.set('port', process.env.PORT || 3000);
 app.locals.title = 'Real Time Feedback';
 app.locals.polls = {};
+app.locals.messages = {};
 
 app.set('view engine', 'jade');
 
@@ -28,7 +27,6 @@ app.get('/polls', (request, response) => {
 app.post('/polls', (request, response) => {
   if (!request.body) { return response.sendStatus(400); }
   var id = generateId();
-  // var socketId = generateId();
   app.locals.polls[id] = request.body;
   poll = app.locals.polls[id]
   poll['id'] = id
@@ -37,25 +35,40 @@ app.post('/polls', (request, response) => {
   startCountdown(poll)
 
   response.redirect('/polls/' + id + '/admin')
-
-  // response.render('admin', { poll: poll, identifier: { id: id } })
-
-  // response.redirect('/polls/' + id + '/admin', { poll: poll });
 });
 
 app.get('/polls/:id', (request, response) => {
   var poll = app.locals.polls[request.params.id];
 
-  // response.sendFile(__dirname + '/views/index.html', { poll: poll });
-  // console.log(poll)
+  response.render('poll', { poll: poll })
+});
+
+app.post('/polls/:id', (request, response) => {
+  var poll = app.locals.polls[request.params.id];
+  if (!poll['messages']) {
+    poll['messages'] = []
+  }
+  groupMessage = request.body['name'] + ': ' + request.body['message']
+  poll['messages'].push(groupMessage)
+
   response.render('poll', { poll: poll })
 });
 
 app.get('/polls/:id/admin', (request, response) => {
   var poll = app.locals.polls[request.params.id];
 
-  // response.sendFile(__dirname + '/views/index.html', { poll: poll });
-  // console.log(poll)
+  response.render('admin', { poll: poll, identifier: { id: request.params.id } })
+});
+
+app.post('/polls/:id/admin', (request, response) => {
+  var poll = app.locals.polls[request.params.id];
+  if (!poll['messages']) {
+    poll['messages'] = []
+  }
+
+  groupMessage = request.body['name'] + ': ' + request.body['message']
+  poll['messages'].push(groupMessage)
+
   response.render('admin', { poll: poll, identifier: { id: request.params.id } })
 });
 
@@ -114,6 +127,13 @@ io.on('connection', function (socket) {
       poll['retired'] = true;
       io.sockets.emit(channel, poll);
       socket.disconnect();
+    }
+  })
+
+
+  socket.on('message', function (channel, message) {
+    if (channel === 'sendMessageToGroup') {
+      io.sockets.emit(channel, message);
     }
   })
 

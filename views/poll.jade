@@ -7,6 +7,13 @@ html(lang="en")
 
     div#status-message
 
+    div#group-message
+      h4 Group Messages
+      if poll.messages
+        ul
+        each val in poll.messages
+          li= val
+
     div#connection-count
 
     div#poll-display
@@ -22,5 +29,16 @@ html(lang="en")
 
     div#vote-count
 
-    script(src='/socket.io/socket.io.js')
-    script(src='/client.js')
+    div#sendMessageToAdmin
+      form(name="add-estimation", method="post")
+        div.input
+          div.label Your name
+          input(type="text", name="name")#name
+        div.input
+          div.label Send a message to the group
+          textarea(name="message", cols="40", rows="5")#message-to-group
+        div.actions
+          input(type="submit", value="Send")#send-message-to-group
+
+script(src='/socket.io/socket.io.js')
+script(src='/client.js')

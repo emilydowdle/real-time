@@ -6,13 +6,20 @@ html(lang="en")
     h3= title
 
     div#links
-      p Thanks for setting up a new poll! Stay on this page to view results.
+      p Thanks for setting up a poll! Stay on this page to view results.
 
-      div
-        a(href='/polls/#{identifier.id}') Vote here
+    div
+      a(href='/polls/#{identifier.id}') Vote here
 
-      div
-        a(href='/polls/#{identifier.id}/admin') Permanent admin link
+    div
+      a(href='/polls/#{identifier.id}/admin') Permanent admin link
+
+    div#group-message
+      h4 Group Messages
+      if poll.messages
+        ul
+        each val in poll.messages
+          li= val
 
     div#connection-count
 
@@ -29,6 +36,17 @@ html(lang="en")
       Close Poll
 
     div#vote-count
+
+    div#sendMessageToVoters
+      form(name="add-estimation", method="post")
+        div.input
+          div.label Your name
+          input(type="text", name="name")#name
+        div.input
+          div.label Send a message to the group
+          textarea(name="message", cols="40", rows="5")#message-to-group
+        div.actions
+          input(type="submit", value="Send")#send-message-to-group
 
     script(src='/socket.io/socket.io.js')
     script(src='/client.js')

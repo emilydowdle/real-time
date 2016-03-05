@@ -80,3 +80,21 @@ socket.on('closePoll', function (message) {
     statusMessage.innerText = 'This poll is now closed.';
   }
 });
+
+var sendMessageToGroup = document.getElementById('send-message-to-group')
+var groupMessage = document.getElementById('group-message')
+
+if (sendMessageToGroup) {
+  sendMessageToGroup.addEventListener('click', function () {
+    name = document.getElementById('name').value
+    message = document.getElementById('message-to-group').value
+    groupMessage = name + ': ' + message
+    socket.send('sendMessageToGroup', { poll: window.location.pathname.split('/')[2], message: groupMessage })
+  })
+}
+
+socket.on('sendMessageToGroup', function (message) {
+  if (groupMessage && message['poll'] === window.location.pathname.split('/')[2]) {
+    groupMessage.innerHTML = groupMessage.innerHTML + '<li>' + message['message'] + '</li>\r';
+  }
+});
