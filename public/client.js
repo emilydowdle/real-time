@@ -4,6 +4,13 @@ var closePoll = document.getElementById('close-poll')
 var instructions = document.getElementById('instructions')
 var pollDisplay = document.getElementById('poll-display');
 var statusMessage = document.getElementById('status-message')
+var getResults = document.getElementById('current-tally')
+
+if (getResults) {
+  getResults.addEventListener('click', function () {
+    socket.send('getResults', '')
+  })
+}
 
 if (closePoll) {
   closePoll.addEventListener('click', function () {
@@ -12,7 +19,6 @@ if (closePoll) {
 }
 
 socket.on('pollDisplay', function (message) {
-  debugger
   for (var key in message){
     pollDisplay.innerText = pollDisplay.innerText + key.toUpperCase() + ": " + message[key] + '\n';
   }
@@ -22,26 +28,24 @@ socket.on('pollDisplay', function (message) {
 var voteCount = document.getElementById('vote-count');
 
 socket.on('voteCount', function (message) {
-  if (localStorage["voteCount"] != undefined) {
-    totalVotes = JSON.parse(localStorage["voteCount"])
-    for (var key in totalVotes){
-      totalVotes[key] = totalVotes[key] + message[key];
+  numberVoted = {}
+  totalVotes = 0
+  for (var key in message){
+    data = message[key][key.replace("/#","")]
+    if (!numberVoted[data]) {
+      numberVoted[data] = 1
+      totalVotes++
+    } else {
+      numberVoted[data]++
+      totalVotes++
     }
-  } else {
-    totalVotes = message
-  };
-
-  voteCount.innerText = 'Total Votes: \n';
-  numberVoted = 0
-
-  for (var key in totalVotes){
-    numberVoted = numberVoted + totalVotes[key]
+  }
+  display = ''
+  for (var key in numberVoted){
+    display = display + ' ' + key + ": " + numberVoted[key] + ' (' + Math.round( numberVoted[key] / totalVotes  * 100 ) + '%)\n\n' ;
   }
 
-  for (var key in totalVotes){
-    voteCount.innerText = voteCount.innerText + ' ' + key + ": " + totalVotes[key] + ' (' + Math.round( totalVotes[key] / numberVoted  * 100 ) + '%)\n' ;
-  }
-  localStorage["voteCount"] = JSON.stringify(totalVotes)
+  voteCount.innerHTML = display
 });
 
 var buttons = document.querySelectorAll('#choices button');
@@ -74,9 +78,14 @@ var pollData = document.querySelectorAll('#poll-data input')
 // });
 
 socket.on('statusMessage', function (message) {
-  statusMessage.innerText = message;
+  if (statusMessage) {
+    statusMessage.innerText = message;
+  }
 });
 
-socket.on('pollClosed', function (message) {
-  statusMessage.innerText = message;
+socket.on('closePoll', function (message) {
+  if (statusMessage) {
+    statusMessage.innerText = message;
+  }
+  socket.disconnect();
 });

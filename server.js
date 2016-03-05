@@ -34,14 +34,15 @@ app.post('/polls', (request, response) => {
   console.log('this is the id: ' + id)
   // console.log(app.locals.polls)
 
-  response.render('admin', { poll: poll, identifier: { id: id } })
+  response.redirect('/polls/' + id + '/admin')
+
+  // response.render('admin', { poll: poll, identifier: { id: id } })
 
   // response.redirect('/polls/' + id + '/admin', { poll: poll });
 });
 
 app.get('/polls/:id', (request, response) => {
   var poll = app.locals.polls[request.params.id];
-  console.log(poll)
 
   // response.sendFile(__dirname + '/views/index.html', { poll: poll });
   // console.log(poll)
@@ -53,7 +54,7 @@ app.get('/polls/:id/admin', (request, response) => {
 
   // response.sendFile(__dirname + '/views/index.html', { poll: poll });
   // console.log(poll)
-  response.render('admin', { poll: poll })
+  response.render('admin', { poll: poll, identifier: { id: request.params.id } })
 });
 
 const port = process.env.PORT || 3000;
@@ -70,8 +71,9 @@ var votes = {};
 var clients = {};
 
 io.on('connection', function (socket) {
-  // console.log('A user has connected.', io.engine.clientsCount);
   io.to(socket.id).emit('statusMessage', 'Thank you for joining this live poll.');
+
+  io.sockets.emit('voteCount', votes);
 
   io.sockets.emit('userConnection', io.engine.clientsCount); //emits to all connected clients
 
@@ -81,10 +83,16 @@ io.on('connection', function (socket) {
         votes[socket.id] = message;
       }
       stripped_id = socket.id.replace('/#', '')
-      socket.emit('voteCount', countVotes(votes));
       io.to(socket.id).emit('statusMessage', 'Your vote has been cast! You chose "' + votes[socket.id][stripped_id] + '".');
+      io.sockets.emit('voteCount', votes);
     }
   });
+
+  socket.on('message', function (channel, message) {
+    if (channel === 'getResults') {
+      io.sockets.emit('voteCount', votes);
+    }
+  })
 
   socket.on('message', function (channel, message) {
     if (channel === 'newPoll') {
@@ -93,7 +101,7 @@ io.on('connection', function (socket) {
 
   socket.on('message', function (channel, message) {
     if (channel === 'closePoll') {
-      io.sockets.emit('pollClosed', 'This poll is now closed.');
+      io.sockets.emit(channel, 'This poll is now closed.');
       socket.disconnect();
     }
   })
