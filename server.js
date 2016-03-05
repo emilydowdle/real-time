@@ -31,7 +31,10 @@ app.post('/polls', (request, response) => {
   // var socketId = generateId();
   app.locals.polls[id] = request.body;
   poll = app.locals.polls[id]
-  console.log('this is the id: ' + id)
+  poll['id'] = id
+  poll['votes'] = {}
+  poll['retired'] = false;
+  // console.log('this is the id: ' + id)
   // console.log(app.locals.polls)
 
   response.redirect('/polls/' + id + '/admin')
@@ -67,24 +70,28 @@ server.listen(port, function () {
 
 const socketIo = require('socket.io');
 const io = socketIo(server);
-var votes = {};
+// var votes = {};
 var clients = {};
 
 io.on('connection', function (socket) {
   io.to(socket.id).emit('statusMessage', 'Thank you for joining this live poll.');
 
-  io.sockets.emit('voteCount', votes);
+  // io.sockets.emit('voteCount', votes);
 
   io.sockets.emit('userConnection', io.engine.clientsCount); //emits to all connected clients
 
   socket.on('message', function (channel, message) {
     if (channel === 'voteCast') {
-      if (!votes[socket.id]) {
-        votes[socket.id] = message;
+      poll = app.locals.polls[message['poll']]
+      if (!poll['retired']) {
+        if (poll['votes'][message['voteCast']] == undefined) {
+          poll['votes'][message['voteCast']] = 1
+        } else {
+          poll['votes'][message['voteCast']]++
+        }
+        io.to(socket.id).emit('statusMessage', 'Your vote has been cast! You chose "' + [message['voteCast']] + '".');
+        io.sockets.emit('voteCount', poll);
       }
-      stripped_id = socket.id.replace('/#', '')
-      io.to(socket.id).emit('statusMessage', 'Your vote has been cast! You chose "' + votes[socket.id][stripped_id] + '".');
-      io.sockets.emit('voteCount', votes);
     }
   });
 
@@ -101,23 +108,33 @@ io.on('connection', function (socket) {
 
   socket.on('message', function (channel, message) {
     if (channel === 'closePoll') {
+      poll = app.locals.polls[message]
+      poll['retired'] = true;
       io.sockets.emit(channel, 'This poll is now closed.');
       socket.disconnect();
     }
   })
 
   socket.on('disconnect', function () {
-    console.log(votes)
     console.log('A user has disconnected.', io.engine.clientsCount);
-    delete votes[socket.id];
-    socket.emit('voteCount', countVotes(votes));
+    // delete votes[socket.id];
+    // socket.emit('voteCount', countVotes(votes));
     io.sockets.emit('userConnection', io.engine.clientsCount);
   });
 
-  socket.on('voteCount', function (votes) {
-
-  });
+  // socket.on('voteCount', function (votes) {
+  //
+  // });
 });
+
+// function setPollTimer(poll){
+//   if(poll['runtime'] !== "N/A"){
+//     setTimeout(function(){
+//       poll['closed'] = true
+//       io.sockets.emit('disableVotes')
+//     }, (poll['runtime'] * 1000 * 60))
+//   }
+// }
 
 function countVotes(votes) {
   var voteCount = {
