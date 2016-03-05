@@ -34,8 +34,7 @@ app.post('/polls', (request, response) => {
   poll['id'] = id
   poll['votes'] = {}
   poll['retired'] = false;
-  // console.log('this is the id: ' + id)
-  // console.log(app.locals.polls)
+  startCountdown(poll)
 
   response.redirect('/polls/' + id + '/admin')
 
@@ -97,7 +96,10 @@ io.on('connection', function (socket) {
 
   socket.on('message', function (channel, message) {
     if (channel === 'getResults') {
-      io.sockets.emit('voteCount', votes);
+      console.log('got to server')
+      poll = app.locals.polls[message]
+      io.sockets.emit('voteCount', poll);
+      console.log(poll)
     }
   })
 
@@ -110,7 +112,7 @@ io.on('connection', function (socket) {
     if (channel === 'closePoll') {
       poll = app.locals.polls[message]
       poll['retired'] = true;
-      io.sockets.emit(channel, 'This poll is now closed.');
+      io.sockets.emit(channel, poll);
       socket.disconnect();
     }
   })
@@ -127,14 +129,15 @@ io.on('connection', function (socket) {
   // });
 });
 
-// function setPollTimer(poll){
-//   if(poll['runtime'] !== "N/A"){
-//     setTimeout(function(){
-//       poll['closed'] = true
-//       io.sockets.emit('disableVotes')
-//     }, (poll['runtime'] * 1000 * 60))
-//   }
-// }
+function startCountdown(poll){
+  console.log(poll['timer'])
+  if(poll['timer'] !== 'Forever'){
+    setTimeout(function(){
+      poll['retired'] = true
+      io.sockets.emit('closePoll', poll)
+    }, (poll['timer'] * 1000 * 60))
+  }
+}
 
 function countVotes(votes) {
   var voteCount = {

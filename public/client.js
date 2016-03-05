@@ -9,7 +9,8 @@ var voted = false
 
 if (getResults) {
   getResults.addEventListener('click', function () {
-    socket.send('getResults', '')
+    socket.send('getResults', window.location.pathname.split('/')[2])
+    console.log('clicked the button')
   })
 }
 
@@ -30,12 +31,15 @@ var voteCount = document.getElementById('vote-count');
 
 socket.on('voteCount', function (message) {
   if (message['id'] === window.location.pathname.split('/')[2]) {
-
+    console.log('got to vote count')
     totalVotes = 0
     for (var key in message['votes']){
       totalVotes = totalVotes + message['votes'][key]
     }
+    if (totalVotes === 0) {
 
+      return voteCount.innerHTML = 'There are no votes to display.'
+    }
     display = ''
     for (var key in message['votes']){
       display = display + ' ' + key + ": " + message['votes'][key] + ' (' + Math.round( message['votes'][key] / totalVotes  * 100 ) + '%)\n\n' ;
@@ -63,31 +67,16 @@ for (var i = 0; i < buttons.length; i++) {
   });
 }
 
-// var newPoll = document.getElementById('create-poll');
 var pollData = document.querySelectorAll('#poll-data input')
 
-// newPoll.addEventListener('click', function () {
-//
-//   poll = {}
-//   for (var i = 0; i < pollData.length; i++) {
-//     poll[pollData[i].id] = pollData[i].value
-//     console.log(poll)
-//   }
-//   socket.send('newPoll', poll)
-// })
-
-// socket.on('newPoll', function (message) {
-//   statusMessage.innerText = message;
-// });
-
 socket.on('statusMessage', function (message) {
-  if (statusMessage) {
+  if (statusMessage && message['id'] === window.location.pathname.split('/')[2]) {
     statusMessage.innerText = message;
   }
 });
 
 socket.on('closePoll', function (message) {
-  if (statusMessage) {
-    statusMessage.innerText = message;
+  if (statusMessage && message['id'] === window.location.pathname.split('/')[2]) {
+    statusMessage.innerText = 'This poll is now closed.';
   }
 });

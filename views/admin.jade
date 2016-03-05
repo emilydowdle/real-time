@@ -22,18 +22,13 @@ html(lang="en")
 
     h5= poll.question
 
-    div#choices
-      button#button-1= poll.a
-      button#button-2= poll.b
-      button#button-3= poll.c
-
-    div#vote-count
-
     button#current-tally.
       View Results
 
     button#close-poll.
       Close Poll
+
+    div#vote-count
 
     script(src='/socket.io/socket.io.js')
     script(src='/client.js')
