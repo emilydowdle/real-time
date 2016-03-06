@@ -27,12 +27,8 @@ app.get('/polls', (request, response) => {
 app.post('/', (request, response) => {
   if (!request.body) { return response.sendStatus(400); }
   var id = generateId();
-  app.locals.polls[id] = request.body;
-  poll = app.locals.polls[id]
-  poll['id'] = id
-  poll['votes'] = {}
-  poll['retired'] = false;
-  startCountdown(poll)
+  addPollToLocals (request, id)
+  setPollDefaults(poll, id)
 
   response.redirect('/polls/' + id + '/admin')
 });
@@ -40,12 +36,8 @@ app.post('/', (request, response) => {
 app.post('/polls', (request, response) => {
   if (!request.body) { return response.sendStatus(400); }
   var id = generateId();
-  app.locals.polls[id] = request.body;
-  poll = app.locals.polls[id]
-  poll['id'] = id
-  poll['votes'] = {}
-  poll['retired'] = false;
-  startCountdown(poll)
+  addPollToLocals (request, id)
+  setPollDefaults(poll, id)
 
   response.redirect('/polls/' + id + '/admin')
 });
@@ -58,11 +50,7 @@ app.get('/polls/:id', (request, response) => {
 
 app.post('/polls/:id', (request, response) => {
   var poll = app.locals.polls[request.params.id];
-  if (!poll['messages']) {
-    poll['messages'] = []
-  }
-  groupMessage = request.body['name'] + ': ' + request.body['message']
-  poll['messages'].push(groupMessage)
+  formatAndAddMessageToPollMessages(request, poll)
 
   response.render('poll', { poll: poll })
 });
@@ -75,22 +63,22 @@ app.get('/polls/:id/admin', (request, response) => {
 
 app.post('/polls/:id/admin', (request, response) => {
   var poll = app.locals.polls[request.params.id];
-  if (!poll['messages']) {
-    poll['messages'] = []
-  }
-  name = request.body['name'] || "Unknown"
-  message = request.body['message'] || "No message"
-  fullMessage = name + ': ' + message
-  poll['messages'].push(fullMessage)
+  formatAndAddMessageToPollMessages(request, poll)
 
   response.render('admin', { poll: poll, identifier: { id: request.params.id } })
 });
+
+function formatAndAddMessageToPollMessages(request, poll) {
+  if (!poll['messages']) { poll['messages'] = []; }name = request.body['name'] || "Unknown"
+  message = request.body['message'] || "No message"
+  fullMessage = name + ': ' + message
+  poll['messages'].push(fullMessage)
+}
 
 const port = process.env.PORT || 3000;
 const server = http.createServer(app)
 
 server.listen(port, function () {
-  console.log('Listening on port ' + port + '.');
 });
 
 const socketIo = require('socket.io');
@@ -104,15 +92,12 @@ io.on('connection', function (socket) {
   socket.on('message', function (channel, message) {
     if (channel === 'voteCast') {
       poll = app.locals.polls[message['poll']]
-      if (!poll['retired']) {
-        if (poll['votes'][message['voteCast']] == undefined) {
-          poll['votes'][message['voteCast']] = 1
-        } else {
-          poll['votes'][message['voteCast']]++
-        }
-        io.to(socket.id).emit('statusMessage', 'Your vote has been cast! You chose "' + [message['voteCast']] + '".');
-        io.sockets.emit('voteCount', poll);
-      }
+      if (poll['retired']) { return; }
+      addVoteToVoteTracker(poll, message)
+      poll['voters'].push(message['socket'])
+
+      io.to(socket.id).emit('statusMessage', 'Your vote has been cast! You chose "' + [message['voteCast']] + '".');
+      io.sockets.emit('voteCount', poll);
     }
   });
 
@@ -154,6 +139,27 @@ function startCountdown(poll){
       poll['retired'] = true
       io.sockets.emit('closePoll', poll)
     }, (poll['timer'] * 1000 * 60))
+  }
+}
+
+function addPollToLocals (request, id) {
+  app.locals.polls[id] = request.body;
+  poll = app.locals.polls[id]
+}
+
+function setPollDefaults(poll, id) {
+  poll['id'] = id
+  poll['votes'] = {}
+  poll['retired'] = false;
+  poll['voters'] = []
+  startCountdown(poll)
+}
+
+function addVoteToVoteTracker(poll, message) {
+  if (poll['votes'][message['voteCast']] == undefined) {
+    poll['votes'][message['voteCast']] = 1
+  } else {
+    poll['votes'][message['voteCast']]++
   }
 }
 

@@ -1,4 +1,4 @@
 exports.validPoll = {
   question: 'Is this a good test?',
-  answers: [ 'Nope!', 'Sorta', 'YES!!', 'HALP ME' ]
+  answers: [ 'Nope!', 'Sorta', 'YES!!' ]
 };

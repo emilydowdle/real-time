@@ -1,6 +1,6 @@
 const assert = require('assert');
-const app = require('../server');
 const request = require('request');
+const app = require('../server');
 const fixtures = require('./fixtures');
 
 describe('Server', () => {
@@ -27,7 +27,6 @@ describe('Server', () => {
   });
 
   describe('GET /', () => {
-
     it('should return a 200', (done) => {
       this.request.get('/', (error, response) => {
         if (error) { done(error); }
@@ -35,15 +34,26 @@ describe('Server', () => {
         done();
       });
     });
+
+    it('should have a body with the name of the application', (done) => {
+      var title = app.locals.title;
+
+      this.request.get('/', (error, response) => {
+        if (error) { done(error); }
+        assert(response.body.includes(title),
+               `"${response.body}" does not include "${title}".`);
+        done();
+      });
+    });
   });
 
-  describe('POST /polls', () => {
+  describe('POST /pizzas', () => {
     beforeEach(() => {
-      app.locals.polls = {};
+      app.locals.pizzas = {};
     });
 
     it('should not return 404', (done) => {
-      this.request.post('/polls', (error, response) => {
+      this.request.post('/pizzas', (error, response) => {
         if (error) { done(error); }
         assert.notEqual(response.statusCode, 404);
         done();
@@ -51,66 +61,65 @@ describe('Server', () => {
     });
 
     it('should receive and store data', (done) => {
-      var payload = { poll: fixtures.validPoll };
+      var payload = { pizza: fixtures.validPizza };
 
-      this.request.post('/polls', { form: payload }, (error, response) => {
+      this.request.post('/pizzas', { form: payload }, (error, response) => {
         if (error) { done(error); }
 
-        var pollCount = Object.keys(app.locals.polls).length;
+        var pizzaCount = Object.keys(app.locals.pizzas).length;
 
-        assert.equal(pollCount, 1, `Expected 1 poll, found ${pollCount}`);
+        assert.equal(pizzaCount, 1, `Expected 1 pizzas, found ${pizzaCount}`);
 
         done();
       });
     });
 
-    it('should redirect the user to their new poll', (done) => {
-      var payload = { poll: fixtures.validPoll };
+    it('should redirect the user to their new pizza', (done) => {
+      var payload = { pizza: fixtures.validPizza };
 
-      this.request.post('/polls', { form: payload }, (error, response) => {
+      this.request.post('/pizzas', { form: payload }, (error, response) => {
         if (error) { done(error); }
-        var newPollId = Object.keys(app.locals.polls)[0];
-        assert.equal(response.headers.location, '/polls/' + newPollId);
+        var newPizzaId = Object.keys(app.locals.pizzas)[0];
+        assert.equal(response.headers.location, '/pizzas/' + newPizzaId);
         done();
       });
     });
 
   });
 
-  describe('GET /polls/:id', () => {
+  describe('GET /pizzas/:id', () => {
 
     beforeEach(() => {
-      app.locals.polls.testPoll = fixtures.validPoll;
+      app.locals.pizzas.testPizza = fixtures.validPizza;
     });
 
     it('should not return 404', (done) => {
-      this.request.get('/polls/testPoll', (error, response) => {
+      this.request.get('/pizzas/testPizza', (error, response) => {
         if (error) { done(error); }
         assert.notEqual(response.statusCode, 404);
         done();
       });
     });
 
-    it('should return a page that has the title of the poll', (done) => {
-      var poll = app.locals.polls.testPoll;
+    it('should return a page that has the title of the pizza', (done) => {
+      var pizza = app.locals.pizzas.testPizza;
 
-      this.request.get('/polls/testPoll', (error, response) => {
+      this.request.get('/pizzas/testPizza', (error, response) => {
         if (error) { done(error); }
-        assert(response.body.includes(poll.question),
-               `"${response.body}" does not include "${poll.question}".`);
+        assert(response.body.includes(pizza.name),
+               `"${response.body}" does not include "${pizza.name}".`);
         done();
       });
     });
 
-    it('should return a page that has the answers of the poll', (done) => {
-      var poll = app.locals.polls.testPoll;
+    it('should return a page that has the toppings of the pizza', (done) => {
+      var pizza = app.locals.pizzas.testPizza;
 
-      this.request.get('/polls/testPoll', (error, response) => {
+      this.request.get('/pizzas/testPizza', (error, response) => {
         if (error) { done(error); }
-        poll.answers.forEach(function(answer) {
-          assert(response.body.includes(answer),
-                 `"${response.body}" does not include "${answer}".`);
-        })
+        pizza.toppings.forEach(function(top){
+          assert(response.body.includes(top), `"${response.body}" does not include "${pizza.name}".`)
+        });
         done();
       });
     });
