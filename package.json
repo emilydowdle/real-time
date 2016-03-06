@@ -31,5 +31,8 @@
   "devDependencies": {
     "mocha": "^2.4.5",
     "request": "^2.69.0"
+  },
+  "engines": {
+    "node": "5.5.0"
   }
 }
