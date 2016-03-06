@@ -3,16 +3,8 @@ html(lang="en")
   head
     title= title
   body
-    h3= title
 
     div#status-message
-
-    div#group-message
-      h4 Group Messages
-      if poll.messages
-        ul
-        each val in poll.messages
-          li= val
 
     div#connection-count
 
@@ -20,16 +12,32 @@ html(lang="en")
 
     div#instructions
 
-    h5= poll.question
+    h2= 'Poll Question: ' + poll.question
 
     div#choices
-      button#a= poll.a
-      button#b= poll.b
-      button#c= poll.c
+      p Please choose an option below.
+
+      div
+        button#a= poll.a
+      div
+        button#b= poll.b
+      div
+        button#c= poll.c
 
     div#vote-count
 
+    div#group-message
+      h4 Group Messages
+      if poll.messages
+        ul
+        each val in poll.messages
+          li= val
+      else
+        p No messages to display.
+
     div#sendMessageToAdmin
+      h4 Send a New Message
+
       form(name="add-estimation", method="post")
         div.input
           div.label Your name
@@ -39,6 +47,9 @@ html(lang="en")
           textarea(name="message", cols="40", rows="5")#message-to-group
         div.actions
           input(type="submit", value="Send")#send-message-to-group
+
+    div
+      a(href='/polls') Click here to create a new poll.
 
 script(src='/socket.io/socket.io.js')
 script(src='/client.js')

@@ -3,23 +3,17 @@ html(lang="en")
   head
     title= title
   body
-    h3= title
+
+    div#status-message
 
     div#links
       p Thanks for setting up a poll! Stay on this page to view results.
 
-    div
-      a(href='/polls/#{identifier.id}') Vote here
-
-    div
-      a(href='/polls/#{identifier.id}/admin') Permanent admin link
-
-    div#group-message
-      h4 Group Messages
-      if poll.messages
-        ul
-        each val in poll.messages
-          li= val
+      ul
+        li
+          a(href='/polls/#{identifier.id}') Voting Page: Send this link to voters.
+        li
+          a(href='/polls/#{identifier.id}/admin') Admin Page: Use this link to view results.
 
     div#connection-count
 
@@ -27,7 +21,7 @@ html(lang="en")
 
     div#instructions
 
-    h5= poll.question
+    h2= 'Poll Question: ' + poll.question
 
     button#current-tally.
       View Results
@@ -37,7 +31,18 @@ html(lang="en")
 
     div#vote-count
 
+    div#group-message
+      h4 Group Messages
+      if poll.messages
+        ul
+        each val in poll.messages
+          li= val
+      else
+        p No messages to display.
+
     div#sendMessageToVoters
+      h4 Send a New Message
+
       form(name="add-estimation", method="post")
         div.input
           div.label Your name
@@ -47,6 +52,9 @@ html(lang="en")
           textarea(name="message", cols="40", rows="5")#message-to-group
         div.actions
           input(type="submit", value="Send")#send-message-to-group
+
+    div
+      a(href='/polls') Click here to create a new poll.
 
     script(src='/socket.io/socket.io.js')
     script(src='/client.js')

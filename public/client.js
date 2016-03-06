@@ -1,5 +1,6 @@
 var socket = io();
 
+var pollId = window.location.pathname.split('/')[2]
 var closePoll = document.getElementById('close-poll')
 var instructions = document.getElementById('instructions')
 var pollDisplay = document.getElementById('poll-display');
@@ -9,20 +10,20 @@ var voted = false
 
 if (getResults) {
   getResults.addEventListener('click', function () {
-    socket.send('getResults', window.location.pathname.split('/')[2])
+    socket.send('getResults', pollId)
     console.log('clicked the button')
   })
 }
 
 if (closePoll) {
   closePoll.addEventListener('click', function () {
-    socket.send('closePoll', window.location.pathname.split('/')[2])
+    socket.send('closePoll', pollId)
   })
 }
 
 socket.on('pollDisplay', function (message) {
   for (var key in message){
-    pollDisplay.innerText = pollDisplay.innerText + key.toUpperCase() + ": " + message[key] + '\n';
+    pollDisplay.innerText = pollDisplay.innerText + key.toUpperCase() + ": " + message[key] + '\r';
   }
   instructions.innerText = "Please cast your vote below.";
 });
@@ -30,7 +31,7 @@ socket.on('pollDisplay', function (message) {
 var voteCount = document.getElementById('vote-count');
 
 socket.on('voteCount', function (message) {
-  if (message['id'] === window.location.pathname.split('/')[2]) {
+  if (message['id'] === pollId) {
     console.log('got to vote count')
     totalVotes = 0
     for (var key in message['votes']){
@@ -40,9 +41,9 @@ socket.on('voteCount', function (message) {
 
       return voteCount.innerHTML = 'There are no votes to display.'
     }
-    display = ''
+    display = '<h4>Vote Results </h4>\r'
     for (var key in message['votes']){
-      display = display + ' ' + key + ": " + message['votes'][key] + ' (' + Math.round( message['votes'][key] / totalVotes  * 100 ) + '%)\n\n' ;
+      display = display + '<li><strong>' + key + ": </strong>" + message['votes'][key] + ' (' + Math.round( message['votes'][key] / totalVotes  * 100 ) + '%)</li>' ;
     }
 
     voteCount.innerHTML = display
@@ -61,7 +62,7 @@ for (var i = 0; i < buttons.length; i++) {
     vote['socket'] = id
     vote['voteCast'] = this.innerText
     vote['option'] = this.id
-    vote['poll'] = window.location.pathname.split('/')[2]
+    vote['poll'] = pollId
     voted = true
     socket.send('voteCast', vote);
   });
@@ -70,13 +71,19 @@ for (var i = 0; i < buttons.length; i++) {
 var pollData = document.querySelectorAll('#poll-data input')
 
 socket.on('statusMessage', function (message) {
-  if (statusMessage && message['id'] === window.location.pathname.split('/')[2]) {
+  if (statusMessage && message['id'] === pollId) {
     statusMessage.innerText = message;
   }
 });
 
+// socket.on('closePoll', function (message) {
+//   if (statusMessage && message['id'] === pollId) {
+//     statusMessage.innerText = 'This poll is now closed.';
+//   }
+// });
+
 socket.on('closePoll', function (message) {
-  if (statusMessage && message['id'] === window.location.pathname.split('/')[2]) {
+  if (statusMessage && message['id'] === pollId) {
     statusMessage.innerText = 'This poll is now closed.';
   }
 });
@@ -86,15 +93,21 @@ var groupMessage = document.getElementById('group-message')
 
 if (sendMessageToGroup) {
   sendMessageToGroup.addEventListener('click', function () {
-    name = document.getElementById('name').value
-    message = document.getElementById('message-to-group').value
-    groupMessage = name + ': ' + message
-    socket.send('sendMessageToGroup', { poll: window.location.pathname.split('/')[2], message: groupMessage })
+    getNameAndMessageFromInputFields()
+
+    socket.send('sendMessageToGroup', { poll: pollId, message: fullMessage })
   })
 }
 
 socket.on('sendMessageToGroup', function (message) {
-  if (groupMessage && message['poll'] === window.location.pathname.split('/')[2]) {
+  if (groupMessage && message['poll'] === pollId) {
     groupMessage.innerHTML = groupMessage.innerHTML + '<li>' + message['message'] + '</li>\r';
   }
+  console.log()
 });
+
+function getNameAndMessageFromInputFields() {
+  name = document.getElementById('name').value || "Unknown"
+  message = document.getElementById('message-to-group').value || "No message"
+  fullMessage = name + ': ' + message
+}

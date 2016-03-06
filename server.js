@@ -24,6 +24,19 @@ app.get('/polls', (request, response) => {
   response.sendFile(__dirname + '/views/index.html');
 });
 
+app.post('/', (request, response) => {
+  if (!request.body) { return response.sendStatus(400); }
+  var id = generateId();
+  app.locals.polls[id] = request.body;
+  poll = app.locals.polls[id]
+  poll['id'] = id
+  poll['votes'] = {}
+  poll['retired'] = false;
+  startCountdown(poll)
+
+  response.redirect('/polls/' + id + '/admin')
+});
+
 app.post('/polls', (request, response) => {
   if (!request.body) { return response.sendStatus(400); }
   var id = generateId();
@@ -65,15 +78,15 @@ app.post('/polls/:id/admin', (request, response) => {
   if (!poll['messages']) {
     poll['messages'] = []
   }
-
-  groupMessage = request.body['name'] + ': ' + request.body['message']
-  poll['messages'].push(groupMessage)
+  name = request.body['name'] || "Unknown"
+  message = request.body['message'] || "No message"
+  fullMessage = name + ': ' + message
+  poll['messages'].push(fullMessage)
 
   response.render('admin', { poll: poll, identifier: { id: request.params.id } })
 });
 
 const port = process.env.PORT || 3000;
-
 const server = http.createServer(app)
 
 server.listen(port, function () {
@@ -82,13 +95,9 @@ server.listen(port, function () {
 
 const socketIo = require('socket.io');
 const io = socketIo(server);
-// var votes = {};
-var clients = {};
 
 io.on('connection', function (socket) {
   io.to(socket.id).emit('statusMessage', 'Thank you for joining this live poll.');
-
-  // io.sockets.emit('voteCount', votes);
 
   io.sockets.emit('userConnection', io.engine.clientsCount); //emits to all connected clients
 
@@ -109,10 +118,8 @@ io.on('connection', function (socket) {
 
   socket.on('message', function (channel, message) {
     if (channel === 'getResults') {
-      console.log('got to server')
       poll = app.locals.polls[message]
       io.sockets.emit('voteCount', poll);
-      console.log(poll)
     }
   })
 
@@ -130,7 +137,6 @@ io.on('connection', function (socket) {
     }
   })
 
-
   socket.on('message', function (channel, message) {
     if (channel === 'sendMessageToGroup') {
       io.sockets.emit(channel, message);
@@ -138,37 +144,17 @@ io.on('connection', function (socket) {
   })
 
   socket.on('disconnect', function () {
-    console.log('A user has disconnected.', io.engine.clientsCount);
-    // delete votes[socket.id];
-    // socket.emit('voteCount', countVotes(votes));
     io.sockets.emit('userConnection', io.engine.clientsCount);
   });
-
-  // socket.on('voteCount', function (votes) {
-  //
-  // });
 });
 
 function startCountdown(poll){
-  console.log(poll['timer'])
   if(poll['timer'] !== 'Forever'){
     setTimeout(function(){
       poll['retired'] = true
       io.sockets.emit('closePoll', poll)
     }, (poll['timer'] * 1000 * 60))
   }
-}
-
-function countVotes(votes) {
-  var voteCount = {
-      A: 0,
-      B: 0,
-      C: 0
-    };
-  for (var vote in votes) {
-    // voteCount[votes[vote]]++
-  }
-  return voteCount;
 }
 
 module.exports = server;
