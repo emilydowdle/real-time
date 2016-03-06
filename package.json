@@ -29,8 +29,10 @@
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "mocha": "^2.4.5",
-    "request": "^2.69.0"
+    "request": "^2.69.0",
+    "supertest": "^1.2.0"
   },
   "engines": {
     "node": "5.5.0"

@@ -25,12 +25,12 @@ app.get('/polls', (request, response) => {
 });
 
 app.post('/', (request, response) => {
-  if (!request.body) { return response.sendStatus(400); }
+  if ( isEmpty(request.body) ) { return response.sendStatus(400); }
   var id = generateId();
   addPollToLocals (request, id)
   setPollDefaults(poll, id)
 
-  response.redirect('/polls/' + id + '/admin')
+  response.redirect(301, '/polls/' + id + '/admin')
 });
 
 app.post('/polls', (request, response) => {
@@ -43,12 +43,19 @@ app.post('/polls', (request, response) => {
 });
 
 app.get('/polls/:id', (request, response) => {
+  if( !app.locals.polls.hasOwnProperty(request.params.id) ) {
+    return response.sendStatus(404);
+  }
   var poll = app.locals.polls[request.params.id];
 
   response.render('poll', { poll: poll })
 });
 
 app.post('/polls/:id', (request, response) => {
+  if( !app.locals.polls.hasOwnProperty(request.params.id) ) {
+    return response.sendStatus(404);
+  }
+
   var poll = app.locals.polls[request.params.id];
   formatAndAddMessageToPollMessages(request, poll)
 
@@ -161,6 +168,15 @@ function addVoteToVoteTracker(poll, message) {
   } else {
     poll['votes'][message['voteCast']]++
   }
+}
+
+function isEmpty(obj) {
+  for(var key in obj) {
+    if(obj.hasOwnProperty(key)){
+      return false;
+    }
+  }
+  return true;
 }
 
 module.exports = server;
