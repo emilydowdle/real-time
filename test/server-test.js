@@ -102,3 +102,19 @@ describe('POST /polls/:id', function(){
       .expect(404, done);
   })
 })
+
+describe('POST /polls/', function(){
+  it('creates a poll', function(done){
+    var res = request(app)
+      .post('/polls/')
+      .send({
+        "question": "Question",
+        "a": "Option 1",
+        "b": "Option 2",
+        "c": "Option 3",
+        "timer": 5
+      })
+      .expect(302, done);
+    // console.log( res );
+  })
+})

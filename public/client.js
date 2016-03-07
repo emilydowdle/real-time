@@ -70,10 +70,17 @@ if (sendMessageToGroup) {
 }
 
 socket.on('sendMessageToGroup', function (message) {
+  resetGroupMessageInnerHtmlIfItIncludesNoMessagesToDisplay ()
   if (groupMessage && message['poll'] === pollId) {
     groupMessage.innerHTML = groupMessage.innerHTML + '<li>' + message['message'] + '</li>\r';
   }
 });
+
+function resetGroupMessageInnerHtmlIfItIncludesNoMessagesToDisplay () {
+  if (groupMessage.innerHTML === '<h4>Group Messages</h4><p>No messages to display.</p>') {
+    groupMessage.innerHTML = '<h4>Group Messages</h4>'
+  }
+}
 
 function getNameAndMessageFromInputFields () {
   name = document.getElementById('name').value || "Unknown"
